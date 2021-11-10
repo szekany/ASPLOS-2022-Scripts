@@ -3,11 +3,10 @@
 <br />
 <p align="center">
 
-  <h3 align="center">ISCA 2021 Script</h3>
+  <h3 align="center">ASPLOS 2022 Scripts</h3>
 
   <p align="center">
-    A collection of redistributable Python script to help organize ISCA 2021 </br>
-    (The 48th International Symposium on Computer Architecture)
+    A collection of redistributable Python scripts to help organize ASPLOS 2022 </br>
   </p>
 </p>
 
