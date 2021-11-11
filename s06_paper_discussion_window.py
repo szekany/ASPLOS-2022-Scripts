@@ -19,14 +19,18 @@ from fuzzywuzzy import process
 #%% Define the input and output CSV filename
 # Input CSV filename
 ## Note: Sample data is unavailable
-paper_authors_filename        = 'sample-data/input/isca2021-authors.csv'
-paper_data_filename           = 'sample-data/input/isca2021-paperdata.csv'
-paper_pc_conflict_filename    = 'sample-data/input/isca2021-pcconflicts.csv'
-paper_pc_assignment_filename  = 'sample-data/input/isca2021-pcassignments.csv'
-pc_avail_doodle_filename      = 'sample-data/input/isca2021-pcavailability.csv'
+
+data_dir = 'real_data'
+conference = 'asplos22'
+
+paper_authors_filename        = data_dir + '/' + conference + '-authors.csv'
+paper_data_filename           = data_dir + '/' + conference + '-data.csv'
+paper_pc_conflict_filename    = data_dir + '/' + conference + '-pcconflicts.csv'
+paper_pc_assignment_filename  = data_dir + '/' + conference + '-pcassignments.csv'
+pc_avail_doodle_filename      = data_dir + '/' + conference + '-pcavailability.csv'
 
 # Output CSV filename
-schedule_filename             = 'sample-data/output/isca2021-paperschedule.csv'
+schedule_filename             = data_dir + '/output/' + conference + '-paperschedule.csv'
 # %%
 # Load the PC Availability Data
 pc_avail_doodle_df = pd.read_csv(pc_avail_doodle_filename)
@@ -73,10 +77,14 @@ papers_df['hash'] = papers_df['hash'].astype(str)
 # %% Preprocess DF
 # Preprocess Doodle by changing 0 to NOT_OK and nan to OK
 # adjust this to match the Doodle Time Slot
-pc_avail_doodle_df[['1', '2', '3','4','5','6','7','8','9','10','11','12','13','14','15','16']] = \
-    pc_avail_doodle_df[['1', '2', '3','4','5','6','7','8','9','10','11','12','13','14','15','16']].replace(
-        ['0',np.nan],['NOT_OK','OK']
+pc_avail_doodle_df[['1', '2', '3','4','5','6','7','8','9','10','11','12','13']] = \
+    pc_avail_doodle_df[['1', '2', '3','4','5','6','7','8','9','10','11','12','13']].replace(
+        [np.nan,'x','X'],['OK','NOT_OK','NOT_OK']
     )
+
+# print(pc_avail_doodle_df)
+# pc_avail_doodle_df.to_csv('test_avail.csv')
+# exit()
 
 # Preprocess Paper Assignment
 # Drop all rows that contains meaningless info
@@ -94,7 +102,7 @@ for index,paper in tqdm.tqdm(paper_pc_assignment_merge_df.iterrows(), total=pape
     # Iterate through each timeslot
     paper_window_dict = {}
     paper_window_dict['ID'] = paper['ID']
-    for timeslot in range(1, 17):
+    for timeslot in range(1, 14):
         num_pc_avail = 0
         # Iterate through each reviewer
         for reviewer in paper['reviewer email']:
@@ -132,7 +140,8 @@ previous_reviewer = []
 
 for current_threshold in tqdm.tqdm(range(0,-12,-1)):
     for phase in range(1,3):
-        for timeslot in range(1, 17):
+        for timeslot in range(1, 14):
+            print(timeslot)
             ## Check if this timeslot is already full
             #if timeslot in schedule_dict.keys():
             #    if(len(schedule_dict[timeslot])>=target_paper_per_timeslot):
@@ -193,7 +202,7 @@ for current_threshold in tqdm.tqdm(range(0,-12,-1)):
                         else:
                             # Let's decide :) 
                             papers_df = pd.DataFrame(papers)
-                            papers_df['lowest_threshold']= (papers_df.loc[:,str(timeslot):'16'] == current_threshold).sum(axis=1)
+                            papers_df['lowest_threshold']= (papers_df.loc[:,str(timeslot):'13'] == current_threshold).sum(axis=1)
                             papers_df['common_reviewer'] = papers_df['reviewer email'].apply(lambda x: len(set(x) & set(previous_reviewer)))
                             papers_df['common_conflict'] = papers_df['pc conflict email'].apply(lambda x: len(set(x) & set(previous_conflict)))
                             papers_df.sort_values(['lowest_threshold','common_reviewer', 'common_conflict'], ascending=[True, False, False], inplace=True)
@@ -207,8 +216,11 @@ for current_threshold in tqdm.tqdm(range(0,-12,-1)):
                             row_index = paper_combine_filter_df[paper_combine_filter_df['ID']==current_paper['ID'].iloc[0]].index
                             paper_combine_filter_df.drop(row_index, inplace=True) 
                             paper_combine_filter_df.reset_index(drop=True, inplace=True)
-                            #print(schedule_dict)
-    
+                            # print(schedule_dict)
+                            # if current_paper['ID'].iloc[0] == 381:
+                            #     print('paper 381')
+                            #     exit()
+
                 # if no more papers that can be scheduled on current time slots
                 if (stop):
                     break
